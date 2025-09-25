@@ -1,50 +1,20 @@
-import { Router } from 'express';
-import { AdotanteController } from '../controllers/adotantesController.js';
-import { LoginController } from '../controllers/loginController.js';
-import { checkAuthentication, checkPermission } from '../auth/authMiddleware.js';
+const express = require('express');
+const router = express.Router();
+const adotanteController = require('../controllers/adotanteController');
 
-// Cria uma única instância do roteador
-const router = Router();
+// GET /api/adotantes - Listar adotantes
+router.get('/', adotanteController.listarAdotantes);
 
-// Instâncias dos controladores
-const adotanteController = new AdotanteController();
-const loginController = new LoginController();
+// GET /api/adotantes/:id - Buscar adotante por ID
+router.get('/:id', adotanteController.buscarAdotante);
 
-// Rotas de Login
-// A rota de login do adotante é um recurso separado, então faz sentido agrupá-la.
-router.post('/login', loginController.login);
+// POST /api/adotantes - Criar novo adotante
+router.post('/', adotanteController.criarAdotante);
 
-// Rotas de Adotantes
-// Aplica o middleware de autenticação e permissão em rotas específicas.
-router.get(
-  '/adotantes',
-  checkAuthentication,
-  checkPermission(['administrador']),
-  adotanteController.findAdotantes
-);
+// PUT /api/adotantes/:id - Atualizar adotante
+router.put('/:id', adotanteController.atualizarAdotante);
 
-router.get(
-  '/adotantes/:id',
-  checkAuthentication,
-  checkPermission(['administrador', 'usuario']),
-  adotanteController.findAdotanteById
-);
+// DELETE /api/adotantes/:id - Deletar adotante
+router.delete('/:id', adotanteController.deletarAdotante);
 
-router.post('/adotantes', adotanteController.addAdotante);
-
-router.put(
-  '/adotantes/:id',
-  checkAuthentication,
-  checkPermission(['administrador', 'usuario']),
-  adotanteController.updateAdotante
-);
-
-// A rota de delete deve ter uma permissão mais restritiva, geralmente apenas para administradores
-router.delete(
-  '/adotantes/:id',
-  checkAuthentication,
-  checkPermission(['administrador']),
-  adotanteController.deleteAdotante
-);
-
-export default router;
+module.exports = router;
