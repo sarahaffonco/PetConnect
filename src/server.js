@@ -8,15 +8,15 @@ const PORT = process.env.PORT || 3000;
 async function testConnection() {
   try {
     await prisma.$connect();
-    console.log('Conectado ao banco de dados MySQL');
+    console.log('✅ Conectado ao banco de dados MySQL');
   } catch (error) {
-    console.error('Erro ao conectar com o banco:', error);
+    console.error('❌ Erro ao conectar com o banco:', error);
     process.exit(1);
   }
 }
 
 app.listen(PORT, async () => {
   await testConnection();
-  console.log(` Servidor rodando na porta ${PORT}`);
-  console.log(` Acesse o Prisma Studio: http://localhost:${PORT}/_studio`);
+  console.log(`🐾 PetConnect API rodando na porta ${PORT}`)
 });
+
