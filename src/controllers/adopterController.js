@@ -1,8 +1,7 @@
-// src/controllers/adotanteController.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-class AdotanteController {
+class AdopterController {
   // Listar todos os adotantes
   async listarAdotantes(req, res) {
     try {
@@ -162,4 +161,4 @@ class AdotanteController {
   }
 }
 
-module.exports = new AdotanteController();
+module.exports = new AdopterController();

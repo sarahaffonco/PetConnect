@@ -1,7 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-class AdocaoController {
+class AdoptionsController {
   // Listar todas as adoções
   async listarAdocoes(req, res) {
     try {
@@ -156,4 +156,4 @@ class AdocaoController {
   }
 }
 
-module.exports = new AdocaoController();
+module.exports = new AdoptionsController();
