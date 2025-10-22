@@ -21,7 +21,6 @@ app.use(morgan('combined'));
 app.use(express.json());
 app.use('/uploads', express.static(path.resolve(__dirname, 'uploads')));
 
-
 // Rotas
 app.use('/api/pets', petRoutes);
 app.use('/api/adopter', adopterRoutes);

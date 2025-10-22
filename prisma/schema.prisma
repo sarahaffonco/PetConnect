@@ -1,4 +1,3 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,36 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Pet {
-  id        Int      @id @default(autoincrement())
-  nome      String
-  especie   String
-  dataNascimento DateTime
-  descricao String
-  status    String   @default("disponivel") // disponivel, adotado
-  tamanho   String?  // pequeno, medio, grande
-  personalidade String? // calmo, brincalhao, independente
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  adocoes Adocao[]
-}
-
 model Adotante {
   id        Int      @id @default(autoincrement())
   nome      String
   email     String   @unique
   telefone  String
-  endereco  String
+  endereco  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  adocoes   Adocao[]
 
-<<<<<<< Updated upstream
-  adocoes Adocao[]
-=======
   @@map("adotantes")
 }
 
+  adocoes Adocao[]
 model Pet {
   id             Int      @id @default(autoincrement())
   nome           String
@@ -53,18 +36,20 @@ model Pet {
   fotoUrl        String?
 
   @@map("pets")
->>>>>>> Stashed changes
 }
 
 model Adocao {
-  id          Int      @id @default(autoincrement())
-  petId       Int
-  adotanteId  Int
-  dataAdocao  DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  petId      Int
+  adotanteId Int
+  dataAdocao DateTime @default(now())
   observacoes String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  pet      Pet     @relation(fields: [petId], references: [id], onDelete: Cascade)
+  pet      Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
   adotante Adotante @relation(fields: [adotanteId], references: [id], onDelete: Cascade)
 
   @@unique([petId, adotanteId])
+  @@map("adocoes")
 }
