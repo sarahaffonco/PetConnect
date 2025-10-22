@@ -20,6 +20,7 @@ model Adotante {
   @@map("adotantes")
 }
 
+  adocoes Adocao[]
 model Pet {
   id             Int      @id @default(autoincrement())
   nome           String
@@ -27,11 +28,12 @@ model Pet {
   dataNascimento DateTime
   descricao      String?
   tamanho        String?
-  personalidade  String?
+  personalidade  Json?
   status         String   @default("disponivel")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   adocoes        Adocao[]
+  fotoUrl        String?
 
   @@map("pets")
 }
