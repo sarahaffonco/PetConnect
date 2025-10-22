@@ -32,7 +32,28 @@ model Adotante {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+<<<<<<< Updated upstream
   adocoes Adocao[]
+=======
+  @@map("adotantes")
+}
+
+model Pet {
+  id             Int      @id @default(autoincrement())
+  nome           String
+  especie        String
+  dataNascimento DateTime
+  descricao      String?
+  tamanho        String?
+  personalidade  Json?
+  status         String   @default("disponivel")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  adocoes        Adocao[]
+  fotoUrl        String?
+
+  @@map("pets")
+>>>>>>> Stashed changes
 }
 
 model Adocao {
