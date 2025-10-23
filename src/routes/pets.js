@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const petController = require('../controllers/petController');
+const upload = require('../middlewares/upload');
 
 // POST /api/pets - Criar novo pet
-router.post('/', petController.criarPet);
+router.post('/', upload.single('foto'), petController.criarPet);
 
 // GET /api/pets - Listar pets com filtros
 router.get('/', petController.listarPets);

@@ -1,7 +1,10 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const petController = require('./controllers/petController');
+const upload = require('./middlewares/upload');
 require('dotenv').config();
 
 const petRoutes = require('./routes/pets');
@@ -11,12 +14,14 @@ const favoritoRoutes = require('./routes/favoritos');
 const authRoutes = require('./routes/auth');
 
 const app = express();
+app.use('/uploads', express.static(path.resolve(__dirname, 'uploads')));
 
 // Middlewares
 app.use(helmet());
 app.use(cors());
 app.use(morgan('combined'));
 app.use(express.json());
+app.use('/uploads', express.static(path.resolve(__dirname, 'uploads')));
 
 // Rotas
 app.use('/api/auth', authRoutes);

@@ -21,7 +21,17 @@ class PetController {
       if (especie) where.especie = especie;
       if (status) where.status = status;
       if (tamanho) where.tamanho = tamanho;
-      if (personalidade) where.personalidade = personalidade;
+
+      if (personalidade) {
+        const personalidadesArray = personalidade.split(',');
+        where.OR = personalidadesArray.map(p => ({
+          personalidade: {
+            // Filtra se a string JSON CONTÉM o nome da personalidade
+            contains: `"${p.trim()}"`,
+            mode: 'insensitive'
+          }
+        }));
+      }
 
       if (idadeMin || idadeMax) {
         const hoje = new Date();
@@ -108,6 +118,21 @@ class PetController {
     try {
       const { nome, especie, dataNascimento, descricao, tamanho, personalidade } = req.body;
 
+      const fotoUrl = req.file
+        ? `http://localhost:3000/uploads/${req.file.filename}`
+        : null; // Se não houver upload
+
+      let personalidadeData = personalidade;
+      if (typeof personalidade === 'string') {
+        // Se o frontend enviar como string JSON, faça o parse.
+        try {
+          personalidadeData = JSON.parse(personalidade);
+        } catch (e) {
+          // Se o frontend enviar como CSV, converta para Array.
+          personalidadeData = personalidade.split(',').map(p => p.trim());
+        }
+      }
+
       if (!nome || !especie || !dataNascimento) {
         return res.status(400).json({ erro: 'Nome, espécie e data de nascimento são obrigatórios' });
       }
@@ -119,8 +144,9 @@ class PetController {
           dataNascimento: new Date(dataNascimento),
           descricao,
           tamanho,
-          personalidade,
-          status: 'disponivel'
+          personalidade: personalidadeData,
+          status: 'disponivel',
+          fotoUrl: fotoUrl
         }
       });
 
@@ -141,7 +167,24 @@ class PetController {
       });
 
       if (!petExistente) {
-        return res.status(404).json({ erro: 'Pet não encontrado' });
+        return res.status(404).json({ error: 'Pet não encontrado' });
+      }
+
+      let personalidadeData = personalidade;
+      if (personalidade && typeof personalidade === 'string') {
+        try {
+          personalidadeData = JSON.parse(personalidade);
+        } catch (e) {
+          personalidadeData = personalidade.split(',').map(p => p.trim());
+        }
+      } else if (personalidade === undefined) {
+        personalidadeData = petExistente.personalidade;
+      }
+
+      // Lógica para fotoUrl (se um novo arquivo for enviado)
+      let updatedFotoUrl = petExistente.fotoUrl; // Começa com o que veio no body (pode ser a URL antiga)
+      if (req.file) { // Se um novo arquivo foi enviado via Multer
+        updatedFotoUrl = `http://localhost:3000/uploads/${req.file.filename}`;
       }
 
       const pet = await prisma.pet.update({
@@ -152,14 +195,16 @@ class PetController {
           dataNascimento: dataNascimento ? new Date(dataNascimento) : undefined,
           descricao,
           tamanho,
-          personalidade,
-          status
+          personalidade: personalidadeData,
+          status,
+          fotoUrl: updatedFotoUrl
         }
       });
 
       res.json(pet);
     } catch (error) {
-      res.status(500).json({ erro: error.message });
+      console.error("Erro ao atualizar pet:", error);
+      res.status(500).json({ error: error.message });
     }
   }
 
