@@ -12,8 +12,8 @@ class PetController {
         personalidade,
         idadeMin,
         idadeMax,
-        page = 1,
-        limit = 10
+        pagina = 1,
+        limite = 10
       } = req.query;
 
       const where = {};
@@ -23,42 +23,42 @@ class PetController {
       if (tamanho) where.tamanho = tamanho;
       if (personalidade) where.personalidade = personalidade;
 
-    if (idadeMin || idadeMax) {
-      const hoje = new Date();
+      if (idadeMin || idadeMax) {
+        const hoje = new Date();
 
-      if (idadeMin) {
-        // Pets que nasceram há mais tempo que idadeMin
-        const dataMax = new Date(
-          hoje.getFullYear() - parseInt(idadeMin),
-          hoje.getMonth(),
-          hoje.getDate()
-        );
-        where.dataNascimento = { lte: dataMax };
-      }
+        if (idadeMin) {
+          // Pets que nasceram há mais tempo que idadeMin
+          const dataMax = new Date(
+            hoje.getFullYear() - parseInt(idadeMin),
+            hoje.getMonth(),
+            hoje.getDate()
+          );
+          where.dataNascimento = { lte: dataMax };
+        }
 
-      if (idadeMax) {
-        // Pets que nasceram há menos tempo que idadeMax
-        const dataMin = new Date(
-          hoje.getFullYear() - parseInt(idadeMax) - 1,
-          hoje.getMonth(),
-          hoje.getDate() + 1
-        );
+        if (idadeMax) {
+          // Pets que nasceram há menos tempo que idadeMax
+          const dataMin = new Date(
+            hoje.getFullYear() - parseInt(idadeMax) - 1,
+            hoje.getMonth(),
+            hoje.getDate() + 1
+          );
 
-         if (where.dataNascimento) {
-          where.dataNascimento.gte = dataMin;
-        } else {
-          where.dataNascimento = { gte: dataMin };
+          if (where.dataNascimento) {
+            where.dataNascimento.gte = dataMin;
+          } else {
+            where.dataNascimento = { gte: dataMin };
+          }
         }
       }
-    }
 
-      const skip = (parseInt(page) - 1) * parseInt(limit);
+      const pular = (parseInt(pagina) - 1) * parseInt(limite);
 
       const [pets, total] = await Promise.all([
         prisma.pet.findMany({
           where,
-          skip,
-          take: parseInt(limit),
+          skip: pular,
+          take: parseInt(limite),
           orderBy: { createdAt: 'desc' }
         }),
         prisma.pet.count({ where })
@@ -66,15 +66,15 @@ class PetController {
 
       res.json({
         pets,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
+        paginacao: {
+          pagina: parseInt(pagina),
+          limite: parseInt(limite),
           total,
-          pages: Math.ceil(total / limit)
+          paginas: Math.ceil(total / limite)
         }
       });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ erro: error.message });
     }
   }
 
@@ -94,12 +94,12 @@ class PetController {
       });
 
       if (!pet) {
-        return res.status(404).json({ error: 'Pet não encontrado' });
+        return res.status(404).json({ erro: 'Pet não encontrado' });
       }
 
       res.json(pet);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ erro: error.message });
     }
   }
 
@@ -109,7 +109,7 @@ class PetController {
       const { nome, especie, dataNascimento, descricao, tamanho, personalidade } = req.body;
 
       if (!nome || !especie || !dataNascimento) {
-        return res.status(400).json({ error: 'Nome, espécie e data de nascimento são obrigatórios' });
+        return res.status(400).json({ erro: 'Nome, espécie e data de nascimento são obrigatórios' });
       }
 
       const pet = await prisma.pet.create({
@@ -126,7 +126,7 @@ class PetController {
 
       res.status(201).json(pet);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ erro: error.message });
     }
   }
 
@@ -141,7 +141,7 @@ class PetController {
       });
 
       if (!petExistente) {
-        return res.status(404).json({ error: 'Pet não encontrado' });
+        return res.status(404).json({ erro: 'Pet não encontrado' });
       }
 
       const pet = await prisma.pet.update({
@@ -159,7 +159,7 @@ class PetController {
 
       res.json(pet);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ erro: error.message });
     }
   }
 
@@ -173,7 +173,7 @@ class PetController {
       });
 
       if (!petExistente) {
-        return res.status(404).json({ error: 'Pet não encontrado' });
+        return res.status(404).json({ erro: 'Pet não encontrado' });
       }
 
       await prisma.pet.delete({
@@ -182,7 +182,7 @@ class PetController {
 
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ erro: error.message });
     }
   }
 }

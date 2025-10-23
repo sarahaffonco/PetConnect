@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 
 // Testar conexão com o banco
-async function testConnection() {
+async function testarConexao() {
   try {
     await prisma.$connect();
     console.log('✅ Conectado ao banco de dados MySQL');
@@ -16,7 +16,6 @@ async function testConnection() {
 }
 
 app.listen(PORT, async () => {
-  await testConnection();
-  console.log(`🐾 PetConnect API rodando na porta ${PORT}`)
+  await testarConexao();
+  console.log(`🐾 PetConnect API rodando na porta ${PORT}`);
 });
-

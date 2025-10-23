@@ -1,17 +1,17 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-class AdoptionsController {
+class AdocaoController {
   // Listar todas as adoções
   async listarAdocoes(req, res) {
     try {
-      const { page = 1, limit = 10 } = req.query;
-      const skip = (parseInt(page) - 1) * parseInt(limit);
+      const { pagina = 1, limite = 10 } = req.query;
+      const pular = (parseInt(pagina) - 1) * parseInt(limite);
 
       const [adocoes, total] = await Promise.all([
         prisma.adocao.findMany({
-          skip,
-          take: parseInt(limit),
+          skip: pular,
+          take: parseInt(limite),
           orderBy: { dataAdocao: 'desc' },
           include: {
             pet: true,
@@ -23,15 +23,15 @@ class AdoptionsController {
 
       res.json({
         adocoes,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
+        paginacao: {
+          pagina: parseInt(pagina),
+          limite: parseInt(limite),
           total,
-          pages: Math.ceil(total / limit)
+          paginas: Math.ceil(total / limite)
         }
       });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ erro: error.message });
     }
   }
 
@@ -41,7 +41,7 @@ class AdoptionsController {
       const { petId, adotanteId, observacoes } = req.body;
 
       if (!petId || !adotanteId) {
-        return res.status(400).json({ error: 'Pet ID e Adotante ID são obrigatórios' });
+        return res.status(400).json({ erro: 'Pet ID e Adotante ID são obrigatórios' });
       }
 
       // Verificar se pet existe e está disponível
@@ -50,11 +50,11 @@ class AdoptionsController {
       });
 
       if (!pet) {
-        return res.status(404).json({ error: 'Pet não encontrado' });
+        return res.status(404).json({ erro: 'Pet não encontrado' });
       }
 
       if (pet.status === 'adotado') {
-        return res.status(400).json({ error: 'Pet já foi adotado' });
+        return res.status(400).json({ erro: 'Pet já foi adotado' });
       }
 
       // Verificar se adotante existe
@@ -63,7 +63,7 @@ class AdoptionsController {
       });
 
       if (!adotante) {
-        return res.status(404).json({ error: 'Adotante não encontrado' });
+        return res.status(404).json({ erro: 'Adotante não encontrado' });
       }
 
       // Usar transação para garantir consistência
@@ -93,9 +93,9 @@ class AdoptionsController {
       res.status(201).json(resultado);
     } catch (error) {
       if (error.code === 'P2002') {
-        return res.status(400).json({ error: 'Este pet já foi adotado por este adotante' });
+        return res.status(400).json({ erro: 'Este pet já foi adotado por este adotante' });
       }
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ erro: error.message });
     }
   }
 
@@ -112,12 +112,12 @@ class AdoptionsController {
       });
 
       if (!adocao) {
-        return res.status(404).json({ error: 'Adoção não encontrada' });
+        return res.status(404).json({ erro: 'Adoção não encontrada' });
       }
 
       res.json(adocao);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ erro: error.message });
     }
   }
 
@@ -132,7 +132,7 @@ class AdoptionsController {
       });
 
       if (!adocao) {
-        return res.status(404).json({ error: 'Adoção não encontrada' });
+        return res.status(404).json({ erro: 'Adoção não encontrada' });
       }
 
       // Usar transação para garantir consistência
@@ -151,9 +151,9 @@ class AdoptionsController {
 
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ erro: error.message });
     }
   }
 }
 
-module.exports = new AdoptionsController();
+module.exports = new AdocaoController();

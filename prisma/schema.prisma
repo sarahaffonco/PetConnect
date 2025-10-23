@@ -8,46 +8,63 @@ datasource db {
 }
 
 model Adotante {
-  id        Int      @id @default(autoincrement())
+  id        Int        @id @default(autoincrement())
   nome      String
-  email     String   @unique
+  email     String     @unique
   telefone  String
   endereco  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  senha     String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   adocoes   Adocao[]
+  favoritos Favorito[]
 
   @@map("adotantes")
 }
 
 model Pet {
-  id             Int      @id @default(autoincrement())
+  id             Int        @id @default(autoincrement())
   nome           String
   especie        String
   dataNascimento DateTime
   descricao      String?
   tamanho        String?
   personalidade  String?
-  status         String   @default("disponivel")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  status         String     @default("disponivel")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
   adocoes        Adocao[]
+  favoritos      Favorito[]
 
   @@map("pets")
 }
 
 model Adocao {
-  id         Int      @id @default(autoincrement())
-  petId      Int
-  adotanteId Int
-  dataAdocao DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  petId       Int
+  adotanteId  Int
+  dataAdocao  DateTime @default(now())
   observacoes String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  pet      Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
-  adotante Adotante @relation(fields: [adotanteId], references: [id], onDelete: Cascade)
+  adotante    Adotante @relation(fields: [adotanteId], references: [id], onDelete: Cascade)
+  pet         Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
 
   @@unique([petId, adotanteId])
+  @@index([adotanteId], map: "adocoes_adotanteId_fkey")
   @@map("adocoes")
+}
+
+model Favorito {
+  id        Int      @id @default(autoincrement())
+  petId     Int
+  usuarioId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pet     Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+  usuario Adotante @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([petId, usuarioId])
+  @@map("favoritos")
 }
