@@ -22,13 +22,11 @@ class PetController {
       if (status) where.status = status;
       if (tamanho) where.tamanho = tamanho;
 
-      if (personalidade) {
-        const personalidadesArray = personalidade.split(',');
+     if (personalidade) {
+        const personalidadesArray = personalidade.split(',').map(p => p.trim().toLowerCase());
         where.OR = personalidadesArray.map(p => ({
           personalidade: {
-            // Filtra se a string JSON CONTÉM o nome da personalidade
-            contains: `"${p.trim()}"`,
-            mode: 'insensitive'
+            array_contains: p // Verifica se o array JSON contém esta string
           }
         }));
       }
@@ -66,13 +64,13 @@ class PetController {
 
       const [pets, total] = await Promise.all([
         prisma.pet.findMany({
-          where,
-          skip: pular,
-          take: parseInt(limite),
-          orderBy: { createdAt: 'desc' }
+            where,
+            skip: pular,
+            take: parseInt(limite),
+            orderBy: { createdAt: 'desc' }
         }),
         prisma.pet.count({ where })
-      ]);
+    ]);
 
       res.json({
         pets,

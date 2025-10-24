@@ -29,13 +29,13 @@ model Pet {
   dataNascimento DateTime
   descricao      String?
   tamanho        String?
-  personalidade  String?
+  personalidade  Json?
   status         String     @default("disponivel")
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   adocoes        Adocao[]
   favoritos      Favorito[]
-
+  fotoUrl        String?
   @@map("pets")
 }
 
