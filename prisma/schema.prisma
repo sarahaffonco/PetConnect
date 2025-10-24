@@ -22,7 +22,6 @@ model Adotante {
   @@map("adotantes")
 }
 
-  adocoes Adocao[]
 model Pet {
   id             Int        @id @default(autoincrement())
   nome           String
