@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -51,7 +51,7 @@ model Adocao {
   pet         Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
 
   @@unique([petId, adotanteId])
-  @@index([adotanteId], map: "adocoes_adotanteId_fkey")
+  @@index([adotanteId], map: "idx_adotanteId")
   @@map("adocoes")
 }
 
