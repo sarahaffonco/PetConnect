@@ -1,3 +1,4 @@
+// src/controllers/adocaoController.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
@@ -5,20 +6,41 @@ class AdocaoController {
   // Listar todas as adoções
   async listarAdocoes(req, res) {
     try {
-      const { pagina = 1, limite = 10 } = req.query;
+      const { pagina = 1, limite = 10, adotanteId, petId } = req.query;
       const pular = (parseInt(pagina) - 1) * parseInt(limite);
+
+      // Construir filtros
+      const where = {};
+      if (adotanteId) where.adotanteId = parseInt(adotanteId);
+      if (petId) where.petId = parseInt(petId);
 
       const [adocoes, total] = await Promise.all([
         prisma.adocao.findMany({
+          where,
           skip: pular,
           take: parseInt(limite),
           orderBy: { dataAdocao: 'desc' },
           include: {
-            pet: true,
-            adotante: true
+            pet: {
+              select: {
+                id: true,
+                nome: true,
+                especie: true,
+                fotoUrl: true,
+                dataNascimento: true
+              }
+            },
+            adotante: {
+              select: {
+                id: true,
+                nome: true,
+                email: true,
+                telefone: true
+              }
+            }
           }
         }),
-        prisma.adocao.count()
+        prisma.adocao.count({ where })
       ]);
 
       res.json({
@@ -31,7 +53,11 @@ class AdocaoController {
         }
       });
     } catch (error) {
-      res.status(500).json({ erro: error.message });
+      console.error('Erro ao listar adoções:', error);
+      res.status(500).json({
+        erro: 'Erro interno do servidor',
+        detalhes: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   }
 
@@ -73,11 +99,26 @@ class AdocaoController {
           data: {
             petId: parseInt(petId),
             adotanteId: parseInt(adotanteId),
-            observacoes
+            observacoes: observacoes || null,
+            dataAdocao: new Date()
           },
           include: {
-            pet: true,
-            adotante: true
+            pet: {
+              select: {
+                id: true,
+                nome: true,
+                especie: true,
+                fotoUrl: true
+              }
+            },
+            adotante: {
+              select: {
+                id: true,
+                nome: true,
+                email: true,
+                telefone: true
+              }
+            }
           }
         });
 
@@ -87,15 +128,29 @@ class AdocaoController {
           data: { status: 'adotado' }
         });
 
+        // Remover de favoritos de todos os usuários
+        await tx.favorito.deleteMany({
+          where: { petId: parseInt(petId) }
+        });
+
         return adocao;
       });
 
-      res.status(201).json(resultado);
+      res.status(201).json({
+        mensagem: 'Adoção registrada com sucesso!',
+        adocao: resultado
+      });
     } catch (error) {
+      console.error('Erro ao registrar adoção:', error);
+
       if (error.code === 'P2002') {
         return res.status(400).json({ erro: 'Este pet já foi adotado por este adotante' });
       }
-      res.status(500).json({ erro: error.message });
+
+      res.status(500).json({
+        erro: 'Erro interno do servidor',
+        detalhes: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   }
 
@@ -103,11 +158,37 @@ class AdocaoController {
   async buscarAdocao(req, res) {
     try {
       const { id } = req.params;
+
+      if (!id || isNaN(parseInt(id))) {
+        return res.status(400).json({ erro: 'ID inválido' });
+      }
+
       const adocao = await prisma.adocao.findUnique({
         where: { id: parseInt(id) },
         include: {
-          pet: true,
-          adotante: true
+          pet: {
+            select: {
+              id: true,
+              nome: true,
+              especie: true,
+              dataNascimento: true,
+              descricao: true,
+              tamanho: true,
+              personalidade: true,
+              fotoUrl: true,
+              createdAt: true
+            }
+          },
+          adotante: {
+            select: {
+              id: true,
+              nome: true,
+              email: true,
+              telefone: true,
+              endereco: true,
+              createdAt: true
+            }
+          }
         }
       });
 
@@ -117,7 +198,64 @@ class AdocaoController {
 
       res.json(adocao);
     } catch (error) {
-      res.status(500).json({ erro: error.message });
+      console.error('Erro ao buscar adoção:', error);
+      res.status(500).json({
+        erro: 'Erro interno do servidor',
+        detalhes: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  // Buscar adoções por adotante
+  async buscarAdocoesPorAdotante(req, res) {
+    try {
+      const { adotanteId } = req.params;
+      const { pagina = 1, limite = 10 } = req.query;
+      const pular = (parseInt(pagina) - 1) * parseInt(limite);
+
+      if (!adotanteId || isNaN(parseInt(adotanteId))) {
+        return res.status(400).json({ erro: 'ID do adotante inválido' });
+      }
+
+      const [adocoes, total] = await Promise.all([
+        prisma.adocao.findMany({
+          where: { adotanteId: parseInt(adotanteId) },
+          skip: pular,
+          take: parseInt(limite),
+          orderBy: { dataAdocao: 'desc' },
+          include: {
+            pet: {
+              select: {
+                id: true,
+                nome: true,
+                especie: true,
+                dataNascimento: true,
+                descricao: true,
+                fotoUrl: true
+              }
+            }
+          }
+        }),
+        prisma.adocao.count({
+          where: { adotanteId: parseInt(adotanteId) }
+        })
+      ]);
+
+      res.json({
+        adocoes,
+        paginacao: {
+          pagina: parseInt(pagina),
+          limite: parseInt(limite),
+          total,
+          paginas: Math.ceil(total / limite)
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao buscar adoções por adotante:', error);
+      res.status(500).json({
+        erro: 'Erro interno do servidor',
+        detalhes: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   }
 
@@ -126,9 +264,21 @@ class AdocaoController {
     try {
       const { id } = req.params;
 
+      if (!id || isNaN(parseInt(id))) {
+        return res.status(400).json({ erro: 'ID inválido' });
+      }
+
       const adocao = await prisma.adocao.findUnique({
         where: { id: parseInt(id) },
-        include: { pet: true }
+        include: {
+          pet: true,
+          adotante: {
+            select: {
+              id: true,
+              nome: true
+            }
+          }
+        }
       });
 
       if (!adocao) {
@@ -149,11 +299,82 @@ class AdocaoController {
         });
       });
 
-      res.status(204).send();
+      res.status(200).json({
+        mensagem: 'Adoção cancelada com sucesso',
+        adocao: {
+          id: adocao.id,
+          pet: adocao.pet,
+          adotante: adocao.adotante,
+          dataAdocao: adocao.dataAdocao
+        }
+      });
     } catch (error) {
-      res.status(500).json({ erro: error.message });
+      console.error('Erro ao cancelar adoção:', error);
+      res.status(500).json({
+        erro: 'Erro interno do servidor',
+        detalhes: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  // Estatísticas de adoções
+  async estatisticasAdocoes(req, res) {
+    try {
+      const totalAdocoes = await prisma.adocao.count();
+
+      const adocoesPorMes = await prisma.adocao.groupBy({
+        by: ['dataAdocao'],
+        _count: {
+          id: true
+        },
+        where: {
+          dataAdocao: {
+            gte: new Date(new Date().getFullYear(), 0, 1) // Desde início do ano
+          }
+        },
+        orderBy: {
+          dataAdocao: 'asc'
+        }
+      });
+
+      const especiesAdotadas = await prisma.adocao.groupBy({
+        by: ['petId'],
+        _count: {
+          id: true
+        }
+      });
+
+      // Buscar detalhes das espécies
+      const especiesComDetalhes = await Promise.all(
+        especiesAdotadas.map(async (item) => {
+          const pet = await prisma.pet.findUnique({
+            where: { id: item.petId },
+            select: { especie: true }
+          });
+          return {
+            especie: pet?.especie || 'Desconhecida',
+            quantidade: item._count.id
+          };
+        })
+      );
+
+      res.json({
+        totalAdocoes,
+        adocoesPorMes: adocoesPorMes.map(item => ({
+          mes: item.dataAdocao.toISOString().substring(0, 7),
+          quantidade: item._count.id
+        })),
+        especiesAdotadas: especiesComDetalhes
+      });
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas:', error);
+      res.status(500).json({
+        erro: 'Erro interno do servidor',
+        detalhes: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   }
 }
 
+// ✅ CORREÇÃO: Exportar a instância da classe corretamente
 module.exports = new AdocaoController();
