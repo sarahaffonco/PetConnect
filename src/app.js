@@ -4,7 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const petController = require('./controllers/petController');
-const upload = require('./middlewares/upload');
+const upload = require('./middleware/upload');
 require('dotenv').config();
 
 const petRoutes = require('./routes/pets');

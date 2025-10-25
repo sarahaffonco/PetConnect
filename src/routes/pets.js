@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const petController = require('../controllers/petController');
-const upload = require('../middlewares/upload');
+const upload = require('../middleware/upload');
 
 // POST /api/pets - Criar novo pet
 router.post('/', upload.single('foto'), petController.criarPet);
